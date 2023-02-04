@@ -1,0 +1,17 @@
+#lang sicp
+
+(define (average x y)
+  (/ (+ x y) 2))
+
+(define (fixed-point f start)
+  (define tolerance 0.00001)
+  (define (close-enuf? x y)
+    (< (abs (- x y)) tolerance))
+  (define (iter old new)
+    (if (close-enuf? old new)
+        new
+        (iter new (f new))))
+  (iter start (f start)))
+
+(define (sq x)
+  (fixed-point (lambda (y) (average y (/ x y))) 1))
