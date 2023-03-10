@@ -23,6 +23,11 @@
 (define (flatmap proc seq)
   (accumulate append nil (map proc seq)))
 
+(define (zip seq1 seq2)
+  (if (or (null? seq1) (null? seq2))
+      nil
+      (cons (list (car seq1) (car seq2)) (zip (cdr seq1) (cdr seq2)))))
+
 ;; / Conventional Interface
 
 ; Each position of the list represents the column.
@@ -40,21 +45,37 @@
 (define (adjoin-position new-row _column board)
   (cons new-row board))
 
-(define (=any? seq-a seq-b)
-  (cond ((or (null? seq-a) (null? seq-b)) #f)
-        ((= (car seq-a) (car seq-b)) #t)
-        (else (=any? (cdr seq-a) (cdr seq-b)))))
-
 ; Same row
 ; Diagonal
 ; - up (row - n, col - n)
 ; - down (row + n, col - n)
+; zip creates a sequence that looks like this:
+; (
+;  (row_at_column_k-1 (row_at_column_k diagonal_up_at_k-1 diagonal_down_at_k-1))
+;  (row_at_column_k-2 (row_at_column_k diagonal_up_at_k-2 diagonal_down_at_k-2))
+;  ...
+;  (row_at_column_1 (row_at_column_k diagonal_up_at_1 diagonal_down_at_1))
+; )
+;
+; The filter finds a pair where the "row_at_column_k-n" is equal to any of the
+; rows in the list next to it.
 (define (safe? column board)
-  (let ((row (car board))
-        (k-1 (cdr board)))
-    (and (null? (filter (lambda (r) (= r row)) (cdr board)))
-        (not (=any? k-1 (map (lambda (x) (+ row x)) (enumerate-interval 1 column))))
-        (not (=any? k-1 (map (lambda (x) (- row x)) (enumerate-interval 1 column)))))))
+  (let ((row (car board)))
+    (null? (filter (lambda (check-tuple)
+                     (or (= (car check-tuple) (car (cadr check-tuple)))
+                         (= (car check-tuple) (cadr (cadr check-tuple)))
+                         (= (car check-tuple) (caddr (cadr check-tuple)))))
+                   (zip (cdr board)
+                        (map (lambda (x) (list row (+ row x) (- row x)))
+                             (enumerate-interval 1 column)))))))
+
+
+;; (define board (list 6 1 3 5))
+;; (define row 6)
+;; (define column 4)
+;; (define X (zip (cdr board)
+;;      (map (lambda (x) (list row (+ row x) (- row x)))
+;;           (enumerate-interval 1 column))))
 
 (define (queens board-size)
   (define (queen-cols k)
