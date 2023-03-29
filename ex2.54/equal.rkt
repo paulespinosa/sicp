@@ -1,0 +1,21 @@
+#lang sicp
+
+(define (equal? a b)
+  (cond ((null? a) (null? b))
+        ((null? b) #f)
+        ((or (not (and (pair? a) (pair? b)))
+             (not (eq? (car a) (car b)))) #f)
+        (else (equal? (cdr a) (cdr b)))))
+
+(equal? '(this is a list)
+        '(this is a list))
+(equal? '(this is a list)
+        '(this (is a) list))
+(equal? '() '())
+(equal? '() '(a b c))
+(equal? '(a b c) '())
+(equal? '(a) '(a b))
+(equal? '(a b) '(a))
+(equal? '(1 2 3) '(1 2 3))
+(equal? (list 1 2) '(1 2))
+(equal? 1 '(1 2))
